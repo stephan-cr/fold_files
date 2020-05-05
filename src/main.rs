@@ -17,14 +17,17 @@ fn transform_filename(filename: &str) -> String {
     transformed
 }
 
+#[derive(Clone, Copy, Eq, PartialEq)]
+struct XDev(u64);
+
 fn visit(
     path: &Path,
     cb: &dyn Fn(&DirEntry),
-    dev: Option<u64>,
-    mut stdout: &mut StdoutLock<'_>,
+    dev: Option<XDev>,
+    mut writer: &mut dyn Write,
 ) -> io::Result<()> {
     let dev = if dev == None {
-        Some(metadata(&path)?.st_dev())
+        Some(XDev(metadata(&path)?.st_dev()))
     } else {
         dev
     };
@@ -33,7 +36,7 @@ fn visit(
         if path.is_file() {
             let meta = metadata(&path)?;
             let size = meta.len();
-            let current_dev_id = meta.st_dev();
+            let current_dev_id = XDev(meta.st_dev());
             if let Some(dev_id) = dev {
                 if dev_id != current_dev_id {
                     return Ok(());
@@ -41,10 +44,10 @@ fn visit(
             }
             if let Some(ref filename_str) = path.to_str() {
                 let transformed = transform_filename(filename_str);
-                stdout.write_fmt(format_args!("{} {}\n", transformed, size))?;
+                writer.write_fmt(format_args!("{} {}\n", transformed, size))?;
             }
         } else if path.is_dir() {
-            visit(&path, &cb, dev, &mut stdout)?;
+            visit(&path, &cb, dev, &mut writer)?;
         }
     }
 
@@ -74,7 +77,7 @@ fn main() -> Result<(), io::Error> {
     )
     .get_matches();
     let _stdout = io::stdout();
-    let mut stdout = _stdout.lock();
+    let mut stdout: StdoutLock<'_> = _stdout.lock();
     if let Some(ref value) = matches.value_of("DIRECTORY") {
         visit(&Path::new(value), &|_x| {}, None, &mut stdout)?;
     }
