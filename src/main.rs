@@ -17,33 +17,38 @@ fn transform_filename(filename: &str) -> String {
     transformed
 }
 
-fn visit(path: &Path, cb: &dyn Fn(&DirEntry), dev: Option<u64>, mut stdout: &mut StdoutLock<'_>) {
+fn visit(
+    path: &Path,
+    cb: &dyn Fn(&DirEntry),
+    dev: Option<u64>,
+    mut stdout: &mut StdoutLock<'_>,
+) -> io::Result<()> {
     let dev = if dev == None {
-        Some(metadata(&path).unwrap().st_dev())
+        Some(metadata(&path)?.st_dev())
     } else {
         dev
     };
-    for entry in read_dir(&path).unwrap() {
-        let path = entry.unwrap().path();
+    for entry in read_dir(&path)? {
+        let path = entry?.path();
         if path.is_file() {
-            let meta = metadata(&path).unwrap();
+            let meta = metadata(&path)?;
             let size = meta.len();
             let current_dev_id = meta.st_dev();
             if let Some(dev_id) = dev {
                 if dev_id != current_dev_id {
-                    return;
+                    return Ok(());
                 }
             }
             if let Some(ref filename_str) = path.to_str() {
                 let transformed = transform_filename(filename_str);
-                stdout
-                    .write_fmt(format_args!("{} {}\n", transformed, size))
-                    .unwrap();
+                stdout.write_fmt(format_args!("{} {}\n", transformed, size))?;
             }
         } else if path.is_dir() {
-            visit(&path, &cb, dev, &mut stdout);
+            visit(&path, &cb, dev, &mut stdout)?;
         }
     }
+
+    Ok(())
 }
 
 fn main() -> Result<(), io::Error> {
@@ -71,7 +76,7 @@ fn main() -> Result<(), io::Error> {
     let _stdout = io::stdout();
     let mut stdout = _stdout.lock();
     if let Some(ref value) = matches.value_of("DIRECTORY") {
-        visit(&Path::new(value), &|_x| {}, None, &mut stdout);
+        visit(&Path::new(value), &|_x| {}, None, &mut stdout)?;
     }
     stdout.flush()?;
 
