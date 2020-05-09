@@ -23,6 +23,7 @@ struct XDev(u64);
 fn visit(
     path: &Path,
     cb: &dyn Fn(&DirEntry),
+    filter_xdev: bool,
     dev: Option<XDev>,
     mut writer: &mut dyn Write,
 ) -> io::Result<()> {
@@ -37,9 +38,11 @@ fn visit(
             let meta = metadata(&path)?;
             let size = meta.len();
             let current_dev_id = XDev(meta.st_dev());
-            if let Some(dev_id) = dev {
-                if dev_id != current_dev_id {
-                    return Ok(());
+            if filter_xdev {
+                if let Some(dev_id) = dev {
+                    if dev_id != current_dev_id {
+                        return Ok(());
+                    }
                 }
             }
             if let Some(ref filename_str) = path.to_str() {
@@ -47,7 +50,7 @@ fn visit(
                 writer.write_fmt(format_args!("{} {}\n", transformed, size))?;
             }
         } else if path.is_dir() {
-            visit(&path, &cb, dev, &mut writer)?;
+            visit(&path, &cb, filter_xdev, dev, &mut writer)?;
         }
     }
 
@@ -78,8 +81,9 @@ fn main() -> Result<(), io::Error> {
     .get_matches();
     let _stdout = io::stdout();
     let mut stdout: StdoutLock<'_> = _stdout.lock();
+    let filter_xdev = matches.is_present("xdev");
     if let Some(ref value) = matches.value_of("DIRECTORY") {
-        visit(&Path::new(value), &|_x| {}, None, &mut stdout)?;
+        visit(&Path::new(value), &|_x| {}, filter_xdev, None, &mut stdout)?;
     }
     stdout.flush()?;
 
