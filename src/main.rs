@@ -1,7 +1,7 @@
 #![warn(rust_2018_idioms)]
 
 use std::env;
-use std::fs::{metadata, read_dir, DirEntry};
+use std::fs::{metadata, read_dir};
 use std::io::{self, StdoutLock, Write};
 use std::os::linux::fs::MetadataExt;
 use std::path::Path;
@@ -22,7 +22,6 @@ struct XDev(u64);
 
 fn visit(
     path: &Path,
-    cb: &dyn Fn(&DirEntry),
     filter_xdev: bool,
     dev: Option<XDev>,
     mut writer: &mut dyn Write,
@@ -50,7 +49,7 @@ fn visit(
                 writer.write_fmt(format_args!("{} {}\n", transformed, size))?;
             }
         } else if path.is_dir() {
-            visit(&path, &cb, filter_xdev, dev, &mut writer)?;
+            visit(&path, filter_xdev, dev, &mut writer)?;
         }
     }
 
@@ -83,7 +82,7 @@ fn main() -> Result<(), io::Error> {
     let mut stdout: StdoutLock<'_> = _stdout.lock();
     let filter_xdev = matches.is_present("xdev");
     if let Some(ref value) = matches.value_of("DIRECTORY") {
-        visit(&Path::new(value), &|_x| {}, filter_xdev, None, &mut stdout)?;
+        visit(&Path::new(value), filter_xdev, None, &mut stdout)?;
     }
     stdout.flush()?;
 
