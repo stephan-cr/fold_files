@@ -10,7 +10,7 @@ How to use
 ----------
 
 ```shell
-fold_files <director> | perl flamegraph.pl --hash --countname=bytes --nametype=Directory: > ~/out.svg
+fold_files <directory> | perl flamegraph.pl --hash --countname=bytes --nametype=Directory: > out.svg
 ```
 
 License
