@@ -6,6 +6,13 @@ repository](https://github.com/brendangregg/FlameGraph), to Rust.
 
 Why?: No particular reason.
 
+How to use
+----------
+
+```shell
+fold_files <director> | perl flamegraph.pl --hash --countname=bytes --nametype=Directory: > ~/out.svg
+```
+
 License
 -------
 
