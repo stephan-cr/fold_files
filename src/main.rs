@@ -9,12 +9,7 @@ use std::path::Path;
 use clap::{App, Arg};
 
 fn transform_filename(filename: &str) -> String {
-    let mut transformed = filename.replace("/", ";");
-    if transformed.starts_with(';') {
-        transformed.remove(0);
-    }
-
-    transformed
+    filename.trim_start_matches('/').replace("/", ";")
 }
 
 #[derive(Clone, Copy, Eq, PartialEq)]
