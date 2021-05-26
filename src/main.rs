@@ -1,4 +1,5 @@
 #![warn(rust_2018_idioms)]
+#![warn(clippy::pedantic)]
 
 use std::env;
 use std::fs::{metadata, read_dir};
@@ -73,8 +74,8 @@ fn main() -> Result<(), io::Error> {
             .index(1),
     )
     .get_matches();
-    let _stdout = io::stdout();
-    let mut stdout: StdoutLock<'_> = _stdout.lock();
+    let stdout = io::stdout();
+    let mut stdout: StdoutLock<'_> = stdout.lock();
     let filter_xdev = matches.is_present("xdev");
     if let Some(ref value) = matches.value_of("DIRECTORY") {
         visit(&Path::new(value), filter_xdev, None, &mut stdout)?;
