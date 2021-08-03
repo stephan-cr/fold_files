@@ -3,7 +3,7 @@
 
 use std::env;
 use std::fs::{metadata, read_dir};
-use std::io::{self, StdoutLock, Write};
+use std::io::{self, BufWriter, StdoutLock, Write};
 use std::os::linux::fs::MetadataExt;
 use std::path::Path;
 
@@ -40,7 +40,7 @@ fn visit(
                     }
                 }
             }
-            if let Some(ref filename_str) = path.to_str() {
+            if let Some(filename_str) = path.to_str() {
                 let transformed = transform_filename(filename_str);
                 writer.write_fmt(format_args!("{} {}\n", transformed, size))?;
             }
@@ -68,19 +68,32 @@ fn main() -> Result<(), io::Error> {
             .takes_value(false),
     )
     .arg(
+        Arg::with_name("buffered")
+            .help("Buffer IO")
+            .long("buffered")
+            .takes_value(false),
+    )
+    .arg(
         Arg::with_name("DIRECTORY")
             .help("Sets the root directory to use")
             .required(true)
             .index(1),
     )
     .get_matches();
+
     let stdout = io::stdout();
-    let mut stdout: StdoutLock<'_> = stdout.lock();
+    let stdout: StdoutLock<'_> = stdout.lock();
+    let mut writer: &mut Box<dyn Write> = &mut if matches.is_present("buffered") {
+        Box::new(BufWriter::new(stdout))
+    } else {
+        Box::new(stdout)
+    };
     let filter_xdev = matches.is_present("xdev");
     if let Some(ref value) = matches.value_of("DIRECTORY") {
-        visit(&Path::new(value), filter_xdev, None, &mut stdout)?;
+        visit(Path::new(value), filter_xdev, None, &mut writer)?;
     }
-    stdout.flush()?;
+
+    writer.flush()?;
 
     Ok(())
 }
