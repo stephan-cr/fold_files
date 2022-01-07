@@ -62,19 +62,19 @@ fn main() -> Result<(), io::Error> {
     )
     .version("0.1.0")
     .arg(
-        Arg::with_name("xdev")
+        Arg::new("xdev")
             .help("Do not descend into directories on other filesystems")
             .long("xdev")
             .takes_value(false),
     )
     .arg(
-        Arg::with_name("buffered")
+        Arg::new("buffered")
             .help("Buffer IO")
             .long("buffered")
             .takes_value(false),
     )
     .arg(
-        Arg::with_name("DIRECTORY")
+        Arg::new("DIRECTORY")
             .help("Sets the root directory to use")
             .required(true)
             .index(1),
