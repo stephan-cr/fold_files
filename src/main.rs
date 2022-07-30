@@ -10,7 +10,7 @@ use std::path::Path;
 use clap::{crate_version, Arg, Command};
 
 fn transform_filename(filename: &str) -> String {
-    filename.trim_start_matches('/').replace("/", ";")
+    filename.trim_start_matches('/').replace('/', ";")
 }
 
 #[derive(Clone, Copy, Eq, PartialEq)]
