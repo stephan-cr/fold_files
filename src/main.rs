@@ -7,7 +7,7 @@ use std::io::{self, BufWriter, StdoutLock, Write};
 use std::os::linux::fs::MetadataExt;
 use std::path::Path;
 
-use clap::{App, Arg};
+use clap::{crate_version, Arg, Command};
 
 fn transform_filename(filename: &str) -> String {
     filename.trim_start_matches('/').replace("/", ";")
@@ -53,14 +53,14 @@ fn visit(
 }
 
 fn main() -> Result<(), io::Error> {
-    let matches = App::new(
+    let matches = Command::new(
         Path::new(&env::args().next().unwrap())
             .file_name()
             .unwrap()
             .to_str()
             .unwrap(),
     )
-    .version("0.1.0")
+    .version(crate_version!())
     .arg(
         Arg::new("xdev")
             .help("Do not descend into directories on other filesystems")
