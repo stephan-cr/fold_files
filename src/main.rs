@@ -7,7 +7,7 @@ use std::io::{self, BufWriter, StdoutLock, Write};
 use std::os::linux::fs::MetadataExt;
 use std::path::Path;
 
-use clap::{crate_version, Arg, Command};
+use clap::{crate_name, crate_version, Arg, ArgAction, Command};
 
 fn transform_filename(filename: &str) -> String {
     filename.trim_start_matches('/').replace('/', ";")
@@ -53,43 +53,39 @@ fn visit(
 }
 
 fn main() -> Result<(), io::Error> {
-    let matches = Command::new(
-        Path::new(&env::args().next().unwrap())
-            .file_name()
-            .unwrap()
-            .to_str()
-            .unwrap(),
-    )
-    .version(crate_version!())
-    .arg(
-        Arg::new("xdev")
-            .help("Do not descend into directories on other filesystems")
-            .long("xdev")
-            .takes_value(false),
-    )
-    .arg(
-        Arg::new("buffered")
-            .help("Buffer IO")
-            .long("buffered")
-            .takes_value(false),
-    )
-    .arg(
-        Arg::new("DIRECTORY")
-            .help("Sets the root directory to use")
-            .required(true)
-            .index(1),
-    )
-    .get_matches();
+    let matches = Command::new(crate_name!())
+        .version(crate_version!())
+        .arg(
+            Arg::new("xdev")
+                .help("Do not descend into directories on other filesystems")
+                .long("xdev")
+                .num_args(0)
+                .action(ArgAction::SetTrue),
+        )
+        .arg(
+            Arg::new("buffered")
+                .help("Buffer IO")
+                .long("buffered")
+                .num_args(0)
+                .action(ArgAction::SetTrue),
+        )
+        .arg(
+            Arg::new("DIRECTORY")
+                .help("Sets the root directory to use")
+                .required(true)
+                .index(1),
+        )
+        .get_matches();
 
     let stdout = io::stdout();
     let stdout: StdoutLock<'_> = stdout.lock();
-    let mut writer: &mut Box<dyn Write> = &mut if matches.is_present("buffered") {
+    let mut writer: &mut Box<dyn Write> = &mut if matches.get_flag("buffered") {
         Box::new(BufWriter::new(stdout))
     } else {
         Box::new(stdout)
     };
-    let filter_xdev = matches.is_present("xdev");
-    if let Some(ref value) = matches.value_of("DIRECTORY") {
+    let filter_xdev = matches.get_flag("xdev");
+    if let Some(ref value) = matches.get_one::<String>("DIRECTORY").map(String::as_str) {
         visit(Path::new(value), filter_xdev, None, &mut writer)?;
     }
 

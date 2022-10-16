@@ -5,7 +5,7 @@ authors = ["Stephan Creutz <stephan.cr@gmx.de>"]
 edition = "2018"
 
 [dependencies]
-clap = { version = "3.2", features = ["cargo"] }
+clap = { version = "4", features = ["cargo", "deprecated"] }
 
 [profile.release]
 lto = true
