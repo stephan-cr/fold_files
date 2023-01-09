@@ -1,6 +1,6 @@
 [package]
 name = "fold_files"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Stephan Creutz <stephan.cr@gmx.de>"]
 edition = "2021"
 
