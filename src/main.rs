@@ -22,12 +22,9 @@ fn visit(
     dev: Option<XDev>,
     mut writer: &mut dyn Write,
 ) -> io::Result<()> {
-    let dev = if dev == None {
-        Some(XDev(metadata(&path)?.st_dev()))
-    } else {
-        dev
-    };
-    for entry in read_dir(&path)? {
+    let dev = dev.or(Some(XDev(metadata(path)?.st_dev())));
+
+    for entry in read_dir(path)? {
         let path = entry?.path();
         if path.is_file() {
             let meta = metadata(&path)?;
@@ -42,7 +39,7 @@ fn visit(
             }
             if let Some(filename_str) = path.to_str() {
                 let transformed = transform_filename(filename_str);
-                writer.write_fmt(format_args!("{} {}\n", transformed, size))?;
+                writer.write_fmt(format_args!("{transformed} {size}\n"))?;
             }
         } else if path.is_dir() {
             visit(&path, filter_xdev, dev, &mut writer)?;
