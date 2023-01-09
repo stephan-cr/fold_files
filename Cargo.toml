@@ -2,7 +2,7 @@
 name = "fold_files"
 version = "0.1.0"
 authors = ["Stephan Creutz <stephan.cr@gmx.de>"]
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 clap = { version = "4", features = ["cargo", "deprecated"] }
